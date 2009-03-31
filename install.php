@@ -46,7 +46,7 @@ if (DB::IsError($check)) {
 
 // If there's not, propogate all extensions and all trunks with YES permissions
 
-$sql = "SELECT DISTINCT extension FROM extensions WHERE context='ext-local';";
+$sql = "SELECT extension FROM users ORDER BY extension";
      $extns = $db->getAll($sql);
 $sql = "SELECT DISTINCT context FROM extensions WHERE context LIKE 'outrt%';";
      $routes = $db->getAll($sql);

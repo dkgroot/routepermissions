@@ -79,11 +79,31 @@ $dispnum = "routepermissions"; //used for switch on config.php
 
 
 function rp_allow($route, $range) {
-	print "I have a range of ".rp_range($range)."<br>\n";
+	$rangearray = rp_range($range);
+	$extens = rp_get_extens();
+	foreach ($rangearray as $r) {
+		if ($extens[$r] == "ok") {
+			rp_do($route, $r, "YES");
+		}
+	}
 }
 
 function rp_deny($route, $range) {
-	print "I have a range of ".rp_range($range)."<br>\n";
+	$rangearray = rp_range($range);
+	$extens = rp_get_extens();
+	foreach ($rangearray as $r) {
+		if ($extens[$r] === "ok") {
+			rp_do($route, $r, "NO");
+		}
+	}
+}
+
+function rp_do($route, $ext, $perm) {
+	global $db;
+	$Sext = mysql_real_escape_string($ext);
+	$Sroute = mysql_real_escape_string($route);
+	sql("DELETE FROM routepermissions WHERE exten='$Sext' AND routename='$Sroute'");
+	sql("INSERT INTO routepermissions (exten, routename, allowed) VALUES ('$Sext', '$Sroute', '$perm')");
 }
 
 function rp_range($range_str) {
@@ -113,6 +133,15 @@ function rp_range($range_str) {
 			}
 		}
 	}
-	return implode(",", $range_out);
+	return $range_out;
+}
+
+function rp_get_extens() {
+	global $db;
+     	$extens = core_users_list();
+	foreach ($extens as $e) {
+		$ret[$e[0]]="ok";
+	}
+	return $ret;
 }
 ?>
