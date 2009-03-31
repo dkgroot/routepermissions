@@ -5,7 +5,7 @@
 	<candisable>yes</candisable>
 	<canuninstall>yes</canuninstall>
 	<changelog>
-		*0.1.0.0* Start Development
+		*0.1.0.0* Original Release
 	</changelog>
 	<description>
 		Allows you to block access to various routes, on a per-extension basis. Note that this module requires a database to be available AT ALL TIMES.

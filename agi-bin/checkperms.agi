@@ -27,7 +27,7 @@ debug("Starting checkperms.agi", 1);
 $cidnum = $AGI->request['agi_callerid'];
 if (!isset($cidnum) || !is_numeric($cidnum)) {
 	debug("CallerID not Parseable - received $cidnum - exiting with DENY",1);
-	$AGI->goto('barred');
+	$AGI->exec_goto("macro-trunk-dial", "barred", "1");
 	exit;
 }
 $routename = get_var($AGI, "ROUTENAME");
@@ -38,7 +38,7 @@ if (!isset($routename)) {
 
 $res = sql("SELECT allowed FROM routepermissions WHERE exten='$cidnum' and routename='$routename'", "getRow");
 if ($res[0] === "NO") {
-	$AGI->goto('barred');
+	$AGI->exec_goto("macro-trunk-dial", "barred", "1");
 	exit;
 }
 debug("Access to route granted", 2);

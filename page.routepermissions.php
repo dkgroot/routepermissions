@@ -56,6 +56,12 @@ $dispnum = "routepermissions"; //used for switch on config.php
 ?>
   
 	<tr><td colspan=2><span id="instructions">
+	<p><h3>Instructions</h3></p>
+	<p>This module allows you to block access to certain routes from specified extensions. You can do bulk changes on this page,
+	and you can individually change access to routes on the extension's page.</p>
+	<p>Note that Asterisk is incapable of having two identical routes and trying to force calls to use the other route if
+	one of them is banned by this module. <b>It will not work.</b> You must have unique outbound routes for the proper selection
+	to work</p> 
 <?php
 	echo "<p><h3>"._("Bulk Changes"); echo "</h3></p> ";
 	echo "<p>"._("Select a route and press Allow or Deny to set all extensions. ");
@@ -79,21 +85,33 @@ $dispnum = "routepermissions"; //used for switch on config.php
 
 
 function rp_allow($route, $range) {
-	$rangearray = rp_range($range);
 	$extens = rp_get_extens();
-	foreach ($rangearray as $r) {
-		if ($extens[$r] == "ok") {
+	if ($range == "All") {
+		foreach ($extens as $r=>$foo) {
 			rp_do($route, $r, "YES");
+		}
+	} else {
+		$rangearray = rp_range($range);
+		foreach ($rangearray as $r) {
+			if ($extens[$r] == "ok") {
+				rp_do($route, $r, "YES");
+			}
 		}
 	}
 }
 
 function rp_deny($route, $range) {
-	$rangearray = rp_range($range);
 	$extens = rp_get_extens();
-	foreach ($rangearray as $r) {
-		if ($extens[$r] === "ok") {
+	if ($range == "All") {
+		foreach ($extens as $r=>$foo) {
 			rp_do($route, $r, "NO");
+		}
+	} else {
+		$rangearray = rp_range($range);
+		foreach ($rangearray as $r) {
+			if ($extens[$r] == "ok") {
+				rp_do($route, $r, "NO");
+			}
 		}
 	}
 }
