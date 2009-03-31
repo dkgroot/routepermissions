@@ -2,6 +2,9 @@
 /* $Id$ */
 
 // Original Release by Rob Thomas (xrobau@gmail.com)
+// Copyright Rob Thomas (2009)
+//
+// Released under the GPL V2 Licence (only)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of version 2 of the GNU General Public
