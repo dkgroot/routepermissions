@@ -43,6 +43,19 @@ function routepermissions_configpageinit($pagename) {
         }
 }
 
+// This MUST be "TheNameOfTheModule_hookGet_config" to be called when a reload (yellow bar) is clicked.
+function routepermissions_hookGet_config($engine) {
+        global $ext;
+        global $version;
+        switch($engine) {
+                case "asterisk":
+			$context="macro-dialout-trunk";
+			$ext->splice($context, 's', 1 ,new ext_agi('checkperms.agi'));
+			$ext->add($context, 'barred', '', new ext_noop('Route administratively banned for this user.'));
+                break;
+        }
+}
+
 function rp_applyhooks() {
         global $currentcomponent;
 

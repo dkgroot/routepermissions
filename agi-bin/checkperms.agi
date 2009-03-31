@@ -1,0 +1,87 @@
+#!/usr/bin/php -q
+<?php
+// Original Release by Rob Thomas (xrobau@gmail.com)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of version 2 of the GNU General Public
+// License as published by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+require_once "phpagi.php";
+require_once "phpagi-asmanager.php";
+
+global $amp_conf;
+$quietmode=1;
+
+// Startup - Get config and connect to Database
+parse_amportal_conf("/etc/amportal.conf");
+require_once($amp_conf['AMPWEBROOT']."/admin/common/db_connect.php");
+
+// I'm an AGI. Huzzah.
+$AGI = new AGI();
+debug("Starting checkperms.agi", 1);
+$cidnum = $AGI->request['agi_callerid'];
+if (!isset($cidnum) || !is_numeric($cidnum)) {
+	debug("CallerID not Parseable - received $cidnum - exiting with DENY",1);
+	$AGI->goto('barred');
+	exit;
+}
+$routename = get_var($AGI, "ROUTENAME");
+if (!isset($routename)) {
+	debug("Unable to find ROUTENAME - exiting with ALLOW", 1);
+	exit;
+}
+
+$res = sql("SELECT allowed FROM routepermissions WHERE exten='$cidnum' and routename='$routename'", "getRow");
+if ($res[0] === "NO") {
+	$AGI->goto('barred');
+	exit;
+}
+debug("Access to route granted", 2);
+exit;
+
+
+// All the useful tools here..
+function parse_amportal_conf($filename="/etc/amportal.conf") {
+	global $amp_conf;
+
+	$file = file($filename);
+	if (is_array($file)) {
+		foreach ($file as $line) {
+			if (preg_match("/^\s*([a-zA-Z0-9_]+)=([a-zA-Z0-9 .&-@=_<>\"\']+)\s*$/",$line,$matches)) {
+				$amp_conf[ $matches[1] ] = $matches[2];
+			}
+		}
+	} 
+}
+
+function get_var( $agi, $value) {
+        $r = $agi->get_variable( $value );
+
+        if ($r['result'] == 1) {
+                $result = $r['data'];
+                return $result;
+        }
+        return '';
+}
+
+function debug($string, $level=3) {
+        global $AGI;
+        $AGI->verbose($string, $level);
+}
+
+function sql($sql,$type="query",$fetchmode=null) {
+        global $db;
+	debug("SQL Debug: $sql", 4);
+        $results = $db->$type($sql,$fetchmode);
+        if(DB::IsError($results)) {
+                die_freepbx($results->getDebugInfo() . "SQL - <br> $sql" );
+        }
+        return $results;
+}
+
+?>
