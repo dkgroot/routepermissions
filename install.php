@@ -43,6 +43,7 @@ if (DB::IsError($check)) {
 }
 
 // Check to see if there's data in the table allready - if so, don't touch.
+// FIXME - todo.
 
 // If there's not, propogate all extensions and all trunks with YES permissions
 
@@ -54,8 +55,11 @@ $sql = "SELECT DISTINCT context FROM extensions WHERE context LIKE 'outrt%';";
 foreach($extns as $ext) {
 	foreach ($routes as $r) {
 		$pieces = explode("-", $r[0]); 
-//		out("INSERT INTO routepermissions (exten, routename, allowed) VALUES ('$ext[0]', '$pieces[2]', 'YES');");
-		$db->query("INSERT INTO routepermissions (exten, routename, allowed) VALUES ('$ext[0]', '$pieces[2]', 'YES');");
+		array_shift ($pieces);
+                array_shift ($pieces);
+                $rn = implode('-', $pieces;)
+	
+		$db->query("INSERT INTO routepermissions (exten, routename, allowed) VALUES ('$ext[0]', '$rn', 'YES');");
 	}
 }
 

@@ -153,7 +153,10 @@ function rp_get_routes() {
 	$res = $db->getAll($sql);
 	foreach ($res as $r) {
 		$pieces = explode("-", $r[0]);
-		$arr[] = $pieces[2];
+		// $pieces[0] = 'outrt', $pieces[1] = a number, pieces 2+ are the route name.
+		array_shift ($pieces);
+		array_shift ($pieces);
+		$arr[] = implode('-', $pieces);
 	} 
 	return $arr;
 }
