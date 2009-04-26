@@ -54,11 +54,7 @@ $sql = "SELECT DISTINCT context FROM extensions WHERE context LIKE 'outrt%';";
 
 foreach($extns as $ext) {
 	foreach ($routes as $r) {
-		$pieces = explode("-", $r[0]); 
-		array_shift ($pieces);
-                array_shift ($pieces);
-                $rn = implode('-', $pieces;)
-	
+                $rn = substr($r[0], 10);
 		$db->query("INSERT INTO routepermissions (exten, routename, allowed) VALUES ('$ext[0]', '$rn', 'YES');");
 	}
 }

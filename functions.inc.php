@@ -152,11 +152,8 @@ function rp_get_routes() {
 	$sql = "SELECT DISTINCT context FROM extensions WHERE context LIKE 'outrt%';";
 	$res = $db->getAll($sql);
 	foreach ($res as $r) {
-		$pieces = explode("-", $r[0]);
-		// $pieces[0] = 'outrt', $pieces[1] = a number, pieces 2+ are the route name.
-		array_shift ($pieces);
-		array_shift ($pieces);
-		$arr[] = implode('-', $pieces);
+		// $r[0] = 'outrt-NNN-routename-goes-here'
+		$arr[] = substr($r[0], 10);
 	} 
 	return $arr;
 }
