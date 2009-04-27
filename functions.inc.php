@@ -64,7 +64,7 @@ function rp_applyhooks() {
         $currentcomponent->addoptlistitem('rpyn', 'NO', _('no'));
         $currentcomponent->setoptlistopts('rpyn', 'sort', false);
 
-        // Add the 'proces' function
+        // Add the 'process' function
         $currentcomponent->addguifunc('rp_configpageload');
 }
 
@@ -81,6 +81,7 @@ function rp_configpageload() {
 		$routes = rp_get_routes();
 		foreach ($routes as $route) {
 			$currentcomponent->addguielem($section, new gui_radio("rp_$route", $currentcomponent->getoptlist('rpyn'), rp_get_perm($extdisplay,$route), $route, "" , null));
+			$currentcomponent->addguielem($section, new gui_textbox("rp-redir_$route", rp_get_redir($extdisplay, $route), "'".$route."' "._('Redirect Prefix'), _("Add this prefex and try again if denied. READ THE INSTRUCTIONS on the Outbound Permissions page"), "", "", true, 0, null));
 		}
 	}
 }
@@ -94,6 +95,9 @@ function rp_configprocess() {
 		if (!strncmp($_REQUEST[$r], "rp_", 3)) {
 			$rps[substr($r, 3)]=$val;
 		}
+		if (!strncmp($_REQUEST[$r], "rp-redir_", 9)) {
+			$redir[substr($r, 9)]=$val;
+		}
 	}
         //if submitting form, update database
         switch ($action) {
@@ -101,6 +105,8 @@ function rp_configprocess() {
                 case "edit":
 		rp_purge_ext($extdisplay);
 		rp_set_perm($extdisplay, $rps);
+		print "Fucker\n";
+		rp_set_redir($extdispay, $redir);
                 break;
                 case "del":
 		rp_purge_ext($extdisplay);
@@ -124,6 +130,20 @@ function rp_get_perm($ext, $route) {
 	}
 }
 
+function rp_get_redir($ext, $route) {
+	global $db;
+	$Sext = mysql_real_escape_string($ext);
+	$Sroute = mysql_real_escape_string($route);
+	$sql = "SELECT faildest FROM routepermissions WHERE routename='$Sroute' AND exten='$Sext'";
+	$res = $db->getRow($sql);
+	if (PEAR::isError($res)) { die($res->getMessage()); }
+	if (isset($res[0])) {
+		return $res[0];
+	} else {
+		return "";
+	}
+}
+
 function rp_set_perm($ext, $rps) {
 	global $db;
 	$Sext = mysql_real_escape_string($ext);
@@ -135,6 +155,19 @@ function rp_set_perm($ext, $rps) {
 		sql($sql);
 	}
 }
+
+function rp_set_redir($ext, $rps) {
+	global $db;
+	$Sext = mysql_real_escape_string($ext);
+	foreach($rps as $r=>$p) {
+		$val = explode("=", $p);
+		$Sr =mysql_real_escape_string($r);
+		$Sval =mysql_real_escape_string($val[1]);
+		$sql = "UPDATE routepermissions SET faildest='$Sval' where exten='$Sext' and routename='$Sr')";
+		sql($sql);
+	}
+}
+
 
 function rp_purge_ext($ext) {
 	global $db;
