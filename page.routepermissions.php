@@ -43,14 +43,21 @@ $dispnum = "routepermissions"; //used for switch on config.php
 		foreach ($_REQUEST as $r=>$val) {
                 	if (!strncmp($r, "on_", 3)) {
 				$route=substr($r,3);
-				print "<br>You want to ALLOW $route<br>\n";
+				print "<h4>Route $route set to ALLOW for supplied range</h4>\n";
 				rp_allow($route, $_REQUEST["range_$route"]);
                 	}
                 	if (!strncmp($r, "off_", 3)) {
 				$route=substr($r,4);
-				print "<br>You want to DENY $route<br>\n";
+				print "<h4>Route $route set to DENY for supplied range</h4>\n";
 				rp_deny($route, $_REQUEST["range_$route"]);
                 	}
+			if ($r == 'update_dest') {
+				$dest = $_REQUEST[$_REQUEST['gotofaildest'].'faildest'];
+				$sdest = mysql_real_escape_string($dest);
+				sql("DELETE FROM routepermissions WHERE EXTEN='-1'");
+				sql("INSERT INTO routepermissions (exten, routename, faildest) VALUES ('-1', 'default', '".$dest."')");
+				print "<h4>Default destination changed</h4>\n";
+			}
 		}
 	}
 ?>
@@ -81,8 +88,15 @@ $dispnum = "routepermissions"; //used for switch on config.php
 		print "<tr><td>$r</td> <td><input type='text' size=15 name='range_$r' value='All' tabindex='++$tabindex'></td>";
 		print "<td><input type=submit name=on_$r value=Allow></td><td><input type=submit name=off_$r value=Deny></td></tr>";
 	}
+	echo '<tr><td colspan="5"><br><h5>'._("Default Destination if denied").':<hr></h5></td></tr>';
+	$res=sql("SELECT faildest FROM routepermissions where exten='-1'", "getRow");
+	if (isset($res[0])) { 
+		echo drawselects($res[0], 'faildest'); 
+	} else {
+		echo drawselects(0, 'faildest');
+	}
+	echo '<tr><td><input type="submit" name="update_dest" value="Change Destination"></td></tr>';
 	echo "</table>\n";
-
 
 function rp_allow($route, $range) {
 	$extens = rp_get_extens();

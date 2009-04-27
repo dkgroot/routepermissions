@@ -15,8 +15,6 @@
 global $db;
 global $amp_conf;
 
-echo "Running\n";
-
 if (! function_exists("out")) {
 	function out($text) {
 		echo $text."<br />";
@@ -34,6 +32,7 @@ $sql = "CREATE TABLE IF NOT EXISTS routepermissions (
   exten int(11) NOT NULL,
   routename varchar(25) NOT NULL,
   allowed varchar(3) default 'YES',
+  faildest varchar(255),
   KEY idx_exten (exten)
 );";
 
@@ -42,21 +41,49 @@ if (DB::IsError($check)) {
         die_freepbx( "Can not create `routepermissions` table: " . $check->getMessage() .  "\n");
 }
 
+// 0.3 - add 'faildest' 
+outn(_("Checking for faildest..."));
+$sql = "SELECT faildest FROM routepermissions";
+$check = $db->getRow($sql, DB_FETCHMODE_ASSOC);
+if(DB::IsError($check)) {
+	// add new field
+	$sql = "ALTER TABLE routepermissions ADD faildest varchar(255);";
+                $result = $db->query($sql);
+                if(DB::IsError($result)) {
+                        die_freepbx($result->getDebugInfo());
+                }
+                out(_("OK"));
+        } else {
+                out(_("already exists"));
+}
+
 // Check to see if there's data in the table allready - if so, don't touch.
-// FIXME - todo.
-
+$sql = "SELECT COUNT(exten) FROM routepermissions";
+$results = $db->getRow($sql);
+if ($results[0] > 0) { 
+	out("Data already exists in routepermissions. Not regenerating");
+} else {
 // If there's not, propogate all extensions and all trunks with YES permissions
+	$sql = "SELECT extension FROM users ORDER BY extension";
+	$extns = $db->getAll($sql);
+	$sql = "SELECT DISTINCT context FROM extensions WHERE context LIKE 'outrt%';";
+	$routes = $db->getAll($sql);
 
-$sql = "SELECT extension FROM users ORDER BY extension";
-     $extns = $db->getAll($sql);
-$sql = "SELECT DISTINCT context FROM extensions WHERE context LIKE 'outrt%';";
-     $routes = $db->getAll($sql);
-
-foreach($extns as $ext) {
-	foreach ($routes as $r) {
-                $rn = substr($r[0], 10);
-		$db->query("INSERT INTO routepermissions (exten, routename, allowed) VALUES ('$ext[0]', '$rn', 'YES');");
+	foreach($extns as $ext) {
+		foreach ($routes as $r) {
+			$rn = substr($r[0], 10);
+			$db->query("INSERT INTO routepermissions (exten, routename, allowed) VALUES ('$ext[0]', '$rn', 'YES');");
+		}
 	}
+}				
+
+// 0.3.0 - Add 'Fail' global destination. Using magic exten number -1
+$sql = "SELECT faildest FROM routepermissions where exten='-1'";
+$results = $db->getRow($sql);
+if ($results[0] == "") { 
+	echo "Addin
+} else {
+	echo "It found $results[0]\n";
 }
 
 ?>
