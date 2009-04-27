@@ -39,12 +39,12 @@ if (!isset($routename)) {
 $res = sql("SELECT allowed,faildest FROM routepermissions WHERE exten='$cidnum' and routename='$routename'", "getRow");
 if ($res[0] === "NO") {
 	if ($res[1] != "") {
-		$AGI->exec_goto($res[1]);
+		$AGI->exec_goto(gotofix($res[1]));
 		exit;
 	} else {
 		$res = sql("SELECT faildest FROM routepermissions WHERE exten='-1'", "getRow");
 		if ($res[0] != "" ) {
-			$AGI->exec_goto($res[0]);
+			$AGI->exec_goto(gotofix($res[0]));
 			exit;
 		} else {
 			$AGI->exec_goto("invalid-dest-set-default-fail", "barred", "1");
@@ -94,6 +94,10 @@ function sql($sql,$type="query",$fetchmode=null) {
                 die_freepbx($results->getDebugInfo() . "SQL - <br> $sql" );
         }
         return $results;
+}
+
+function gotofix($goto) {
+	return strtr($goto, ",", "|");
 }
 
 ?>
