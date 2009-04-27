@@ -77,13 +77,4 @@ if ($results[0] > 0) {
 	}
 }				
 
-// 0.3.0 - Add 'Fail' global destination. Using magic exten number -1
-$sql = "SELECT faildest FROM routepermissions where exten='-1'";
-$results = $db->getRow($sql);
-if ($results[0] == "") { 
-	echo "Addin
-} else {
-	echo "It found $results[0]\n";
-}
-
 ?>
