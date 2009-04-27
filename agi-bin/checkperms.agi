@@ -36,11 +36,23 @@ if (!isset($routename)) {
 	exit;
 }
 
-$res = sql("SELECT allowed FROM routepermissions WHERE exten='$cidnum' and routename='$routename'", "getRow");
+$res = sql("SELECT allowed,faildest FROM routepermissions WHERE exten='$cidnum' and routename='$routename'", "getRow");
 if ($res[0] === "NO") {
-	$AGI->exec_goto("macro-trunk-dial", "barred", "1");
-	exit;
+	if ($res[1] != "") {
+		$AGI->exec_goto($res[1]);
+		exit;
+	} else {
+		$res = sql("SELECT faildest FROM routepermissions WHERE exten='-1'", "getRow");
+		if ($res[0] != "" ) {
+			$AGI->exec_goto($res[0]);
+			exit;
+		} else {
+			$AGI->exec_goto("invalid-dest-set-default-fail", "barred", "1");
+			exit;
+		}
+	}
 }
+
 debug("Access to route granted", 2);
 exit;
 
