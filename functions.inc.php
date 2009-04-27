@@ -90,12 +90,14 @@ function rp_configprocess() {
 	// Extract any variables from $REQUEST that start with rp_
         $action = isset($_REQUEST['action'])?$_REQUEST['action']:null;
         $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
+	$rps = array();
+	$redir = array();
 
 	foreach ($_REQUEST as $r=>$val) {
 		if (!strncmp($_REQUEST[$r], "rp_", 3)) {
 			$rps[substr($r, 3)]=$val;
 		}
-		if (!strncmp($_REQUEST[$r], "rp-redir_", 9)) {
+		if (!strncmp($r, "rp-redir_", 9)) {
 			$redir[substr($r, 9)]=$val;
 		}
 	}
@@ -105,8 +107,7 @@ function rp_configprocess() {
                 case "edit":
 		rp_purge_ext($extdisplay);
 		rp_set_perm($extdisplay, $rps);
-		print "Fucker\n";
-		rp_set_redir($extdispay, $redir);
+		rp_set_redir($extdisplay, $redir);
                 break;
                 case "del":
 		rp_purge_ext($extdisplay);
@@ -160,10 +161,9 @@ function rp_set_redir($ext, $rps) {
 	global $db;
 	$Sext = mysql_real_escape_string($ext);
 	foreach($rps as $r=>$p) {
-		$val = explode("=", $p);
 		$Sr =mysql_real_escape_string($r);
-		$Sval =mysql_real_escape_string($val[1]);
-		$sql = "UPDATE routepermissions SET faildest='$Sval' where exten='$Sext' and routename='$Sr')";
+		$Sval =mysql_real_escape_string($p);
+		$sql = "UPDATE routepermissions SET faildest='$Sval' where exten='$Sext' and routename='$Sr'";
 		sql($sql);
 	}
 }
