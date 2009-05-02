@@ -1,10 +1,11 @@
 <module>
 	<rawname>routepermissions</rawname>
 	<name>Outbound Route Permissions</name>
-	<version>0.3.0.0</version>
+	<version>0.3.1.0</version>
 	<candisable>yes</candisable>
 	<canuninstall>yes</canuninstall>
 	<changelog>
+		*0.3.1.0* Inserts ROUTENAME into routes so core does not have to
 		*0.3.0.0* Added ability to redirect back with a prefix, added 'fail' destination.
 		*0.2.0.0* Fixed bug with routenames not being displayed properly if they contained a hyphen
 		*0.1.0.0* Original Release
