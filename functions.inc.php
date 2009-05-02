@@ -48,15 +48,36 @@ function routepermissions_configpageinit($pagename) {
 
 // This MUST be "TheNameOfTheModule_hookGet_config" to be called when a reload (yellow bar) is clicked.
 function routepermissions_hookGet_config($engine) {
-        global $ext;
-        global $version;
-        switch($engine) {
-                case "asterisk":
+	global $ext;
+	global $version;
+	switch($engine) {
+		case "asterisk":
 			$context="macro-dialout-trunk";
 			$ext->splice($context, 's', 1 ,new ext_agi('checkperms.agi'));
 			$ext->add($context, 'barred', '', new ext_noop('Route administratively banned for this user.'));
-                break;
-        }
+
+			// Insert the ROUTENAME into each route
+			//
+			$names = core_routing_getroutenames();
+			foreach($names as $name) {
+				$context = 'outrt-'.$name[0];
+				$routename = substr($context,10);
+				$routes = core_routing_getroutepatterns($name[0]);
+				foreach ($routes as $rt) {
+					//strip the pipe out as that's what we use for the dialplan extension
+					//
+					$extension = str_replace('|','',$rt);
+
+					// If there are any wildcards in there, add a _ to the start
+					//
+					if (preg_match("/\.|z|x|\[|\]/i", $extension)) { 
+						$extension = "_".$extension; 
+					}
+					$ext->splice($context, $extension, 1, new ext_setvar('__ROUTENAME',$routename));
+				}
+			}						
+      break;
+	}
 }
 
 function rp_applyhooks() {
