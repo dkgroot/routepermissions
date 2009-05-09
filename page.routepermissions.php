@@ -50,6 +50,11 @@ $dispnum = "routepermissions"; //used for switch on config.php
 				print "<h4>Route $route set to DENY for supplied range</h4>\n";
 				rp_deny($route, $_REQUEST["range_$route"]);
 			}
+			if (!strncmp($r, "redirect_", 8)) {
+				$route=substr($r,9);
+				print "<h4>Route $route set to DENY for supplied range using redirect prefix</h4>\n";
+				rp_redir($route, $_REQUEST["range_$route"], $_REQUEST["rp-redir_$route"]);
+			}
 			if ($r == 'update_dest') {
 				$dest = $_REQUEST[$_REQUEST['gotofaildest'].'faildest'];
 				$sdest = mysql_real_escape_string($dest);
@@ -149,12 +154,37 @@ function rp_deny($route, $range) {
 	}
 }
 
+function rp_redir($route, $range, $redir) {
+	$extens = rp_get_extens();
+	if ($range == "All") {
+		foreach ($extens as $r=>$foo) {
+			rp_doredir($route, $r, "NO", $redir);
+		}
+	} else {
+		$rangearray = rp_range($range);
+		foreach ($rangearray as $r) {
+			if ($extens[$r] == "ok") {
+				rp_doredir($route, $r, "NO", $redir);
+			}
+		}
+	}
+}
+
 function rp_do($route, $ext, $perm) {
 	global $db;
 	$Sext = mysql_real_escape_string($ext);
 	$Sroute = mysql_real_escape_string($route);
 	sql("DELETE FROM routepermissions WHERE exten='$Sext' AND routename='$Sroute'");
 	sql("INSERT INTO routepermissions (exten, routename, allowed) VALUES ('$Sext', '$Sroute', '$perm')");
+}
+
+function rp_doredir($route, $ext, $perm, $redir) {
+	global $db;
+	$Sext = mysql_real_escape_string($ext);
+	$Sroute = mysql_real_escape_string($route);
+	$Sredir = mysql_real_escape_string($redir);
+	sql("DELETE FROM routepermissions WHERE exten='$Sext' AND routename='$Sroute'");
+	sql("INSERT INTO routepermissions (exten, routename, allowed, faildest) VALUES ('$Sext', '$Sroute', '$perm', '$Sredir')");
 }
 
 function rp_range($range_str) {
