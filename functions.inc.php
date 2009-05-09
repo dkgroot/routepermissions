@@ -55,6 +55,17 @@ function routepermissions_hookGet_config($engine) {
 			$context="macro-dialout-trunk";
 			$ext->splice($context, 's', 1 ,new ext_agi('checkperms.agi'));
 			$ext->add($context, 'barred', '', new ext_noop('Route administratively banned for this user.'));
+			$ext->add($context, 'reroute', '', new ext_goto('1','${ARG2}','from-internal'));
+			
+			$context="macro-dialout-dundi";
+			$ext->splice($context, 's', 1 ,new ext_agi('checkperms.agi'));
+			$ext->add($context, 'barred', '', new ext_noop('Route administratively banned for this user.'));
+			$ext->add($context, 'reroute', '', new ext_goto('1','${ARG2}','from-internal'));
+
+			$context="macro-dialout-enum";
+			$ext->splice($context, 's', 0 ,new ext_agi('checkperms.agi'));
+			$ext->add($context, 'barred', '', new ext_noop('Route administratively banned for this user.'));
+			$ext->add($context, 'reroute', '', new ext_goto('1','${ARG2}','from-internal'));
 
 			// Insert the ROUTENAME into each route
 			//

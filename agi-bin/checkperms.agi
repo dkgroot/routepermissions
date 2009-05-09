@@ -46,12 +46,16 @@ if (!isset($routename)) {
 $res = sql("SELECT allowed,faildest FROM routepermissions WHERE exten='$cidnum' and routename='$routename'", "getRow");
 if ($res[0] === "NO") {
 	if ($res[1] != "") {
-		$AGI->exec_goto(gotofix($res[1]));
+		$arg2 = $res[1].get_var($AGI, "ARG2");
+		$AGI->set_variable('ARG2',$arg2);
+		$AGI->exec_goto(gotofix("reroute,1"));
 		exit;
 	} else {
 		$res = sql("SELECT faildest FROM routepermissions WHERE exten='-1'", "getRow");
 		if ($res[0] != "" ) {
-			$AGI->exec_goto(gotofix($res[0]));
+			$arg2 = $res[0].get_var($AGI, "ARG2");
+			$AGI->set_variable('ARG2',$arg2);
+			$AGI->exec_goto(gotofix("reroute,1"));
 			exit;
 		} else {
 			$AGI->exec_goto("invalid-dest-set-default-fail", "barred", "1");
