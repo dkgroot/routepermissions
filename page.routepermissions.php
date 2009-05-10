@@ -52,8 +52,14 @@ $dispnum = "routepermissions"; //used for switch on config.php
 			}
 			if (!strncmp($r, "redirect_", 8)) {
 				$route=substr($r,9);
-				print "<h4>Route $route set to DENY for supplied range using redirect prefix</h4>\n";
-				rp_redir($route, $_REQUEST["range_$route"], $_REQUEST["rp-redir_$route"]);
+				$redir=trim($_REQUEST["rp-redir_$route"]);
+				// Make sure redirect field is not empty or whitespace only - could have better sanity checking
+				if (strlen($redir)) {
+					print "<h4>Route $route set to DENY for supplied range using redirect prefix $redir</h4>\n";
+					rp_redir($route, $_REQUEST["range_$route"], $redir);
+				} else {
+					print "<h4>Redirect selected but redirect prefix missing for route $route - no action taken</h4>\n";
+				}
 			}
 			if ($r == 'update_dest') {
 				$dest = $_REQUEST[$_REQUEST['gotofaildest'].'faildest'];
