@@ -58,7 +58,7 @@ $dispnum = "routepermissions"; //used for switch on config.php
 					print "<h4>Route $route set to DENY for supplied range using redirect prefix $redir</h4>\n";
 					rp_redir($route, $_REQUEST["range_$route"], $redir);
 				} else {
-					print "<h4>Redirect selected but redirect prefix missing for route $route - no action taken</h4>\n";
+					print "<h3><font color=#FF0000>Redirect selected but redirect prefix missing for route $route - no action taken</font></h3>\n";
 				}
 			}
 			if ($r == 'update_dest') {

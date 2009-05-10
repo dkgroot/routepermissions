@@ -1,10 +1,11 @@
 <module>
 	<rawname>routepermissions</rawname>
 	<name>Outbound Route Permissions</name>
-	<version>0.3.2.2</version>
+	<version>0.3.2.3</version>
 	<candisable>yes</candisable>
 	<canuninstall>yes</canuninstall>
 	<changelog>
+		*0.3.2.3* Changed font size and color on empty redirect field error message to make it more obvious
 		*0.3.2.2* If redirect selected make sure redirect field is not empty or whitespace only
 		*0.3.2.1* Minor changes to instructions on main page
 		*0.3.2.0* Bug fixes in Ticket #3655 and Ticket #3669
@@ -16,9 +17,10 @@
 	<description>
 		Allows you to block access to various routes, on a per-extension basis. Note that this module requires a database to be available AT ALL TIMES.
 	</description>
+	<info>http://www.freepbx.org/support/documentation/module-documentation/third-party-unsupported-modules/outbound-route-permission</info>
 	<menuitems>
                 <routepermissions>Outbound Permissions</routepermissions>
-        </menuitems>
+	</menuitems>
 	<type>setup</type>
 	<category>Outbound Call Control</category>
 	<location>x</location>
