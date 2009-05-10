@@ -72,28 +72,33 @@ $dispnum = "routepermissions"; //used for switch on config.php
 	bulk changes on this page, and you can individually change access to routes on the extension's page.</p>
 	<p>Note that Asterisk is incapable of having two identical routes and trying to force calls to use
 	the other route if one of them is banned by this module. <b>It will not work.</b> You must have 
-	unique outbound routes for the proper selection to work</p> 
+	unique outbound routes for the proper selection to work.</p> 
 	<p>If you wish to emulate this functionality, you can use the 'Redirect' function. Any number you type 
-	in the 'Redirect' range will be PREPENDED to the number dialled, and the call will then be sent through
+	in the 'Redirect' range will be PREPENDED to the number dialed, and the call will then be sent through
 	the dialplan again. For example:</p>
 	<p><ul>
 		<li>Route 1: Zap/1 matches 0|.</li>
 		<li>Route 2: Sip/Foo matches 1|.</li>
 	</ul></p>
-	<p>If you wanted to stop exten 100 from using Zap/1 at all, and send all his calls through Sip/Foo, 
+	<p>If you wanted to stop extension 100 from using Zap/1 at all, and send all his calls through Sip/Foo, 
 	you would need to DENY 100 access to Route1, and create a NEW route, Route3:</p>
 	<p><ul><li>Route 3: Sip/Foo matches 9990|.</li></ul></p>
-	<p>In the 'Redirect' field, type '999'. When exten 100 dials 0123456, they match Route 1. Route 1 FAILS,
-	and then system invisibly changes the number dialled to be 9990123456 (note the '0' he dialled 
+	<p>In the 'Redirect' field, type '999'. When extension 100 dials 0123456, they match Route 1. Route 1 FAILS,
+	and then system invisibly changes the number dialed to be 9990123456 (note the '0' he dialled 
 	originally is preserved, and you then strip 9990 from the front in Route 3), which matches Route 3 
-	and the call is then sent via Sip/Foo</p>
-	<p>Redirect rules are only checked if the route is DENIED</p>
+	and the call is then sent via Sip/Foo.</p>
+	<p>Redirect rules are only checked if the route is DENIED.</p>
+	<p>You can set a Default Destination if calls are denied. If you wish to use something other than the
+	default in a specific instance, you can use a Redirect prefix and a Misc. Application.  Example: set
+	the redirect prefix to 000123, then create a Misc. Application and set the Feature Code to <b>_000123.</b>
+	(note the underscore at the start and the period at the end of the Feature Code - both are necessary),
+	then make the destination of the Misc. Application whatever you wish.</p>
 <?php
 	echo "<p><h3>"._("Bulk Changes"); echo "</h3></p> ";
-	echo "<p>"._("Select a route and press Allow or Deny to set all extensions. ");
+	echo "<p>"._("Select a route and press Allow or Deny to set all extensions. If you enter a redirect prefix and click Redirect, the route will automatically be set to DENIED.");
 	echo  _("You can enter any normal range - comma or hyphen seperated. For example '123,125,200-300' will select extensions 123, 125 and any extensions between 200 and 300.");
 	echo "</p>\n ";
-	echo "<p>"._("Note that there is NO UNDO and changes take effect IMMEDIATELY. Be cautious.")."</p>";
+	echo "<p>"._("Note that there is NO UNDO and changes take effect IMMEDIATELY. Don't click Redirect unless you have correct data in both text fields! Be cautious.")."</p>";
 	
 
 	echo '<form autocomplete="off" name="edit" action="'.$_SERVER['PHP_SELF'].'" method="post">';
