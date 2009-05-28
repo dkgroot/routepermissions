@@ -1,10 +1,12 @@
 <module>
 	<rawname>routepermissions</rawname>
 	<name>Outbound Route Permissions</name>
-	<version>0.3.2.3</version>
+	<category>Third Party Addon</category>
+	<version>0.3.2.4</version>
 	<candisable>yes</candisable>
 	<canuninstall>yes</canuninstall>
 	<changelog>
+		*0.3.2.4* Changed category to Third Party Addon, that name to be used by all modules in the Extended Repo (until they are brought into the main repo)
 		*0.3.2.3* Changed font size and color on empty redirect field error message to make it more obvious
 		*0.3.2.2* If redirect selected make sure redirect field is not empty or whitespace only
 		*0.3.2.1* Minor changes to instructions on main page
@@ -19,10 +21,9 @@
 	</description>
 	<info>http://www.freepbx.org/support/documentation/module-documentation/third-party-unsupported-modules/outbound-route-permission</info>
 	<menuitems>
-                <routepermissions>Outbound Permissions</routepermissions>
+		<routepermissions>Outbound Permissions</routepermissions>
 	</menuitems>
 	<type>setup</type>
-	<category>Outbound Call Control</category>
-	<location>x</location>
-	<md5sum>x</md5sum>
+	<location>../contributed_modules/release/routepermissions-0.3.2.4.tgz</location>
+	<md5sum>7796ce103458e32ecbe948e4c6d9cf89</md5sum>
 </module>
