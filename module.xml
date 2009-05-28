@@ -24,6 +24,6 @@
 		<routepermissions>Outbound Permissions</routepermissions>
 	</menuitems>
 	<type>setup</type>
-	<location>../contributed_modules/release/routepermissions-0.3.2.4.tgz</location>
-	<md5sum>7796ce103458e32ecbe948e4c6d9cf89</md5sum>
+	<location>contributed_modules/release/routepermissions-0.3.2.4.tgz</location>
+	<md5sum>59c91b5c81023af59f02d79bb6e6cb80</md5sum>
 </module>
