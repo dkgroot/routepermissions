@@ -28,7 +28,6 @@ function routepermissions_configpageinit($pagename) {
         $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
         $extension = isset($_REQUEST['extension'])?$_REQUEST['extension']:null;
         $tech_hardware = isset($_REQUEST['tech_hardware'])?$_REQUEST['tech_hardware']:null;
-
         // We only want to hook 'users' or 'extensions' pages.
         if ($pagename != 'users' && $pagename != 'extensions')
                 return true;
@@ -69,16 +68,13 @@ function routepermissions_hookGet_config($engine) {
 
 			// Insert the ROUTENAME into each route
 			//
-			$names = core_routing_getroutenames();
+			$names = core_routing_list();
 			foreach($names as $name) {
-				$context = 'outrt-'.$name[0];
-				$routename = substr($context,10);
-				$routes = core_routing_getroutepatterns($name[0]);
+				$context = 'outrt-'.$name['route_id'];
+				$routename = $name['name'];
+				$routes = core_routing_getroutepatternsbyid($name['route_id']);
 				foreach ($routes as $rt) {
-					//strip the pipe out as that's what we use for the dialplan extension
-					//
-					$extension = str_replace('|','',$rt);
-
+					$extension = $rt['match_pattern_prefix'].$rt['match_pattern_pass'];
 					// If there are any wildcards in there, add a _ to the start
 					//
 					if (preg_match("/\.|z|x|\[|\]/i", $extension)) { 
@@ -125,6 +121,9 @@ function rp_configprocess() {
 	// Extract any variables from $REQUEST that start with rp_
         $action = isset($_REQUEST['action'])?$_REQUEST['action']:null;
         $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
+        if(isset($_REQUEST['extension'])){
+        	$extdisplay=$_REQUEST['extension'];
+        }
 	$rps = array();
 	$redir = array();
 
@@ -210,18 +209,13 @@ function rp_purge_ext($ext) {
 	$sql = "DELETE FROM routepermissions WHERE exten='$Sext'";
 	sql($sql);
 }
-	
-	
-
-// When outbound routes is rewritten to no longer use the 'extensions' database, the following function will need to be changed
 
 function rp_get_routes() {
 	global $db;
-	$sql = "SELECT DISTINCT context FROM extensions WHERE context LIKE 'outrt%';";
+	$sql = "SELECT DISTINCT a.name FROM `outbound_routes` a JOIN `outbound_route_sequence` b ON a.route_id = b.route_id ORDER BY `seq`;";
 	$res = $db->getAll($sql);
 	foreach ($res as $r) {
-		// $r[0] = 'outrt-NNN-routename-goes-here'
-		$arr[] = substr($r[0], 10);
+		$arr[] = $r[0];
 	} 
 	return $arr;
 }

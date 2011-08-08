@@ -2,10 +2,13 @@
 	<rawname>routepermissions</rawname>
 	<name>Outbound Route Permissions</name>
 	<category>Third Party Addon</category>
-	<version>0.3.2.5</version>
+	<version>0.4.0.0</version>
+	<publisher>HiPBX.org</publisher>
+	<license>AGPLv3</license>
 	<candisable>yes</candisable>
 	<canuninstall>yes</canuninstall>
 	<changelog>
+		*0.4.0.0* #5220, updated to work with FreePBX 2.9
 		*0.3.2.5* add version dependency
 		*0.3.2.4* Changed category to Third Party Addon, that name to be used by all modules in the Extended Repo (until they are brought into the main repo)
 		*0.3.2.3* Changed font size and color on empty redirect field error message to make it more obvious
@@ -25,9 +28,6 @@
 		<routepermissions>Outbound Permissions</routepermissions>
 	</menuitems>
 	<type>setup</type>
-	<depends>
-		<version>lt 2.8.0alpha0</version>
-	</depends>
 	<location>contributed_modules/release/routepermissions-0.3.2.5.tgz</location>
 	<md5sum>11734f588010342f5191a87e0017eed1</md5sum>
 </module>
