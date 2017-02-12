@@ -96,12 +96,75 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
 
     public function install()
     {
-        return;
+        $columns = array(
+            "exten"     => array("type"=>"integer"),
+            "routename" => array("type"=>"string", "length"=>25),
+            "allowed"   => array("type"=>"string", "length"=>3, "default"=>"YES", "notnull"=>false),
+            "faildest"  => array("type"=>"string", "length"=>255, "default"=>"", "notnull"=>false),
+            "prefix"    => array("type"=>"string", "length"=>16, "default"=>"", "notnull"=>false),
+        );
+        $indices = array(
+            "idx_exten" => array("type"=>"index", "cols"=>array("exten")),
+            "idx_route" => array("type"=>"index", "cols"=>array("routename")),
+        );
+        try {
+            $table = $this->db->migrate("polycom");
+            $table->modify($columns, $indices);
+        }
+
+        $stmt = $this->db->query("SELECT COUNT(exten) FROM routepermissions");
+        if ($stmt->fetchColumn() > 0) {
+            out(_("Found data, using existing route permissions"));
+            try {
+                $this->db->exec("UPDATE routepermissions SET prefix=faildest, faildest='' WHERE faildest RLIKE '^[a-d0-9*#]+$'");
+            } catch (\PDOException $e) {
+                die_freepbx(sprintf(_("Error updating routepermissions table: %s"), $result->getMessage()));
+            }
+        } else {
+            outn(_("New install, populating default allow permission&hellip; "));
+            $extens = array();
+            $devices = \FreePBX::Core()->getAllUsersByDeviceType();
+            foreach($devices as $exten) {
+                if ($exten->id) {
+                    $extens[] = $exten->id;
+                }
+            }
+            try {
+                $routes = \FreePBX::Core()->getAllRoutes();
+                $query = "INSERT INTO routepermissions (exten, routename, allowed, faildest) VALUES (?, ?, 'YES', '')";
+                $stmt = $db->prepare($query);
+                foreach($extens as $ext) {
+                    foreach ($routes as $r) {
+                        $result = $db->execute($stmt, array($ext, $r["name"]));
+                    }
+                }
+            } catch (\Exception $e) {
+                die_freepbx(sprintf(_("Error populating routepermissions table: %s"), $e->getMessage()));
+            }
+            out(_("complete"));
+        }
     }
 
     public function uninstall()
     {
-        return;
+        $amp_conf = \FreePBX\Freepbx_conf::create();
+
+        outn(_("Removing routepermissions database table&hellip; "));
+        try {
+            $this->db->query("DROP TABLE routepermissions");
+            out(_("complete"));
+        } catch (\PDOException $e) {
+            out(sprintf(_("Error removing routepermissions table: %s"), $result->getMessage()));
+        }
+
+        outn(_("Removing AGI script&hellip; "));
+        $agidir = $amp_conf->get("ASTAGIDIR");
+        $result = unlink("$agidir/checkperms.agi");
+        if (!$result) {
+            out(_("failed! File must be removed manually"));
+        } else {
+            out(_("complete"));
+        }
     }
 
     public function backup()
