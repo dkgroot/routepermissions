@@ -1,14 +1,14 @@
 <module>
 	<rawname>routepermissions</rawname>
 	<name>Outbound Route Permissions</name>
-	<version>1.0</version>
+	<version>1.5alpha1</version>
 	<category>Settings</category>
 	<menuitems>
 		<routepermissions>Outbound Permissions</routepermissions>
 	</menuitems>
 	<publisher>Point of Presence</publisher>
 	<description>Allows you to block access to various routes, on a per-extension basis.</description>
-	<changelog>
+	<changelog>*1.5* remove all legacy code, version 13+ only
 		*1.0* full rewrite for compatibility with 13 (tested working with 2.11 as well), store prefix in separate column, allow per-extension destinations and bulk destination changes
 		*0.4.0.0* #5220, updated to work with FreePBX 2.9
 		*0.3.2.5* add version dependency
@@ -26,7 +26,8 @@
 	<license>GPL 3</license>
 	<licenselink>http://www.gnu.org/licenses/gpl-3.0.txt</licenselink>
 	<depends>
-		<version>2.11</version>
+		<version>13</version>
 		<engine>asterisk ge 1.6.0</engine>
+		<phpversion>5.3</phpversion>
 	</depends>
 </module>
