@@ -152,8 +152,8 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
         }
 
         // Insert the ROUTENAME into each route
-        $names = core_routing_list();
-        foreach ($names as $name) {
+        foreach (\FreePBX::Core()->getAllRoutes() as $route) {
+            $name = $route["name"];
             $context = "outrt-$name[route_id]";
             $routename = $name["name"];
             $routes = core_routing_getroutepatternsbyid($name["route_id"]);
@@ -199,16 +199,21 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
         }
 
         $routes = $this->getRoutes();
-        $stmt = $db->prepare("SELECT allowed, faildest, prefix FROM routepermissions WHERE routename = ? AND exten = ?");
+        try {
+            $stmt = $db->prepare("SELECT allowed, faildest, prefix FROM routepermissions WHERE routename = ? AND exten = ?");
+        } catch (\PDOException $e) {
+            return false;
+        }
         foreach ($routes as $route) {
-            // in 13 this is PDO, returns boolean; in 11 it's PEAR, returns a result object
-            $res = $this->db->execute($stmt, array($route, $extdisplay));
-            if (DB::isError($res) || $res === false) {
+            try {
+                $stmt->execute(array($route, $extdisplay));
+                $res = $stmt->fetch(\PDO::FETCH_NUM);
+            } catch (\PDOException $e) {
                 continue;
-            } elseif ($res === true) {
-                list($allowed, $faildest, $prefix) = $stmt->fetch(\PDO::FETCH_NUM);
-            } elseif ($res->numRows() === 1) {
-                list($allowed, $faildest, $prefix) = $res->fetchRow();
+            }
+            if (is_array($res) && count($res) > 0) {
+                // a result was returned
+                list($allowed, $faildest, $prefix) = $res;
             } else {
                 $allowed = "YES";
                 $faildest = "";
@@ -327,8 +332,13 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
         switch ($action) {
             case "add":
             case "edit":
-                $result = $this->db->query("DELETE FROM routepermissions WHERE exten = ?", $extdisplay);
-                $stmt = $this->db->prepare("INSERT INTO routepermissions (exten, routename, allowed, faildest, prefix) VALUES(?, ?, ?, ?, ?)");
+                try {
+                    $stmt = $this->db->prepare("DELETE FROM routepermissions WHERE exten = ?");
+                    $stmt->execute(array($extdisplay));
+                    $stmt = $this->db->prepare("INSERT INTO routepermissions (exten, routename, allowed, faildest, prefix) VALUES(?, ?, ?, ?, ?)");
+                } catch (\PDOException $e) {
+                    return false;
+                }
                 foreach($route_perms as $route_name=>$data) {
                     if ($data["perms"] === "REDIRECT") {
                         $data["faildest"] = null;
@@ -342,17 +352,26 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
                         $data["perms"] = "YES";
                         $data["faildest"] = $data["prefix"] = null;
                     }
-                    $res = $this->db->execute($stmt, array(
-                        $extdisplay,
-                        $route_name, 
-                        $data["perms"],
-                        $data["faildest"],
-                        $data["prefix"],
-                    ));
+                    try {
+                        $res = $stmt->execute(array(
+                            $extdisplay,
+                            $route_name, 
+                            $data["perms"],
+                            $data["faildest"],
+                            $data["prefix"],
+                        ));
+                    } catch (\PDOException $e) {
+                        return false;
+                    }
                 }
                 break;
             case "del":
-                $this->db->query("DELETE FROM routepermissions WHERE exten = ?", $extdisplay);
+                try {
+                    $stmt = $this->db->prepare("DELETE FROM routepermissions WHERE exten = ?");
+                    $stmt->execute(array($extdisplay));
+                } catch (\PDOException $e) {
+                    return false;
+                }
                 break;
         }
     }
@@ -360,28 +379,39 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
     public function getRoutes()
     {
         $sql = "SELECT DISTINCT name FROM outbound_routes JOIN outbound_route_sequence USING (route_id) ORDER BY seq";
-        $result = $this->db->getCol($sql);
-        return $result;
+        try {
+            $result = $this->db->getCol($sql);
+            return $result;
+        } catch (\PDOException $e) {
+            return false;
+        }
     }
 
     public function getDefaultDest()
     {
         $sql = "SELECT faildest FROM routepermissions where exten = -1 LIMIT 1";
-        $result = $this->db->getOne($sql);
-        return $result;
+        try {
+            $result = $this->db->getOne($sql);
+            return $result;
+        } catch (\PDOException $e) {
+            return false;
+        }
     }
 
     public function updateDefaultDest($dest)
     {
         $sql = "DELETE FROM routepermissions WHERE exten = -1";
-        $this->db->query($sql);
-        if (DB::isError($res)) {
+        try {
+            $this->db->query($sql);
+        } catch (\PDOException $e) {
             return false;
         }
         if (!empty($dest)) {
             $sql = "INSERT INTO routepermissions (exten, routename, faildest, prefix) VALUES ('-1', 'default', ?, '')";
-            $res = $this->db->query($sql, array($dest));
-            if (DB::isError($res)) {
+            try {
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute(array($dest));
+            } catch (\PDOException $e) {
                 return false;
             }
         }
@@ -397,18 +427,20 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
         if (count($extens) === 0) {
             return false;
         }
-        $sql = "DELETE FROM routepermissions WHERE exten=? AND routename=?";
-        $stmt1 = $this->db->prepare($sql);
-        $sql = "INSERT INTO routepermissions (exten, routename, allowed, faildest, prefix) VALUES (?, ?, ?, ?, ?)";
-        $stmt2 = $this->db->prepare($sql);
+        try {
+            $sql = "DELETE FROM routepermissions WHERE exten=? AND routename=?";
+            $stmt1 = $this->db->prepare($sql);
+            $sql = "INSERT INTO routepermissions (exten, routename, allowed, faildest, prefix) VALUES (?, ?, ?, ?, ?)";
+            $stmt2 = $this->db->prepare($sql);
+        } catch (\PDOException $e) {
+            return false;
+        }
         foreach ($extens as $ext) {
-            $res = $this->db->execute($stmt1, array($ext, $route));
-            if (DB::isError($res) || $res === false) {
-                return $res;
-            }
-            $res = $this->db->execute($stmt2, array($ext, $route, $allowed, $faildest, $prefix));
-            if (DB::isError($res) || $res === false) {
-                return $res;
+            try {
+                $stmt1->execute(array($ext, $route));
+                $stmt2->execute(array($ext, $route, $allowed, $faildest, $prefix));
+            } catch (\PDOException $e) {
+                return false;
             }
         }
         return true;
