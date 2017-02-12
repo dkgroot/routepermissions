@@ -21,6 +21,8 @@
 
 class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
 {
+    static $module = "routepermissions";
+
     /** Constructor code for version 13+
      * @param Object $freepbx The FreePBX object
      * @return void
@@ -110,6 +112,8 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
         try {
             $table = $this->db->migrate("polycom");
             $table->modify($columns, $indices);
+        } catch (\Doctrine\DBAL\Exception $e) {
+            die_freepbx(sprintf(_("Error updating routepermissions table: %s"), $e->getMessage()));
         }
 
         $stmt = $this->db->query("SELECT COUNT(exten) FROM routepermissions");
@@ -118,7 +122,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
             try {
                 $this->db->exec("UPDATE routepermissions SET prefix=faildest, faildest='' WHERE faildest RLIKE '^[a-d0-9*#]+$'");
             } catch (\PDOException $e) {
-                die_freepbx(sprintf(_("Error updating routepermissions table: %s"), $result->getMessage()));
+                die_freepbx(sprintf(_("Error updating routepermissions table: %s"), $e->getMessage()));
             }
         } else {
             outn(_("New install, populating default allow permission&hellip; "));
@@ -135,7 +139,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
                 $stmt = $db->prepare($query);
                 foreach($extens as $ext) {
                     foreach ($routes as $r) {
-                        $result = $db->execute($stmt, array($ext, $r["name"]));
+                        $db->execute($stmt, array($ext, $r["name"]));
                     }
                 }
             } catch (\Exception $e) {
@@ -439,6 +443,101 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
         }
     }
 
+    /**
+     * Handle GET/POST requests to the page
+     */
+    public function handleRequest($request = null)
+    {
+        $cwd          = dirname(__FILE__);
+        $message      = "";
+        $errormessage = "";
+
+        if ($request !== null) {
+            foreach ($request as $k=>$perm) {
+                if (strncmp($k, "permission_", 11) === 0) {
+                    $route = substr($k, 11);
+                    $redir = "";
+                    $prefix = "";
+                    switch ($perm) {
+                    case "YES":
+                        break;
+                    case "NO":
+                        if (isset($request["goto_$route"])) {
+                            $type = $request["goto_$route"];
+                            if (isset($request["${type}_$route"])) {
+                                $redir = $request["${type}_$route"];
+                            }
+                        }
+                        break;
+                    case "REDIRECT":
+                        $perm = "NO";
+                        $prefix = trim($request["prefix_$route"]);
+                        if (empty($prefix)) {
+                            $errormessage .= sprintf(
+                                _("Redirect selected but redirect prefix missing for route %s - no action taken"),
+                                $route
+                            );
+                            $errormessage .= "<br/>";
+                            continue;
+                        }
+                        break;
+                    default:
+                        continue 2;
+                    }
+                    $range = $request["range_$route"];
+                    try {
+                        $result = $this->setRangePermissions($route, $range, $perm, $redir, $prefix);
+                        if ($prefix) {
+                            $message .= sprintf(
+                                _("Route %s set to %s for supplied range %s using redirect prefix %s"),
+                                $route,
+                                $perm,
+                                $range,
+                                $prefix
+                            );
+                            $message .= "<br/>";
+                        } else {
+                            $message .= sprintf(
+                                _("Route %s set to %s for supplied range %s"),
+                                $route,
+                                $perm,
+                                $range
+                            );
+                            $message .= "<br/>";
+                        }
+                    } catch (\PDOException $e) {
+                        $errormessage .= sprintf(
+                            _("Database error, couldn't set permissions for route %s: %s"),
+                            $route,
+                            $e->getMessage()
+                        );
+                        $errormessage .= "<br/>";
+                    }
+                } elseif ($k == "update_default") {
+                    $dest_type = $request["gotofaildest"];
+                    $dest = $request[$dest_type . "faildest"];
+                    try {
+                        $result = $this->updateDefaultDest($dest);
+                        $message = _("Default destination changed");
+                    } catch (\PDOException $e) {
+                        $errormessage = sprintf(
+                            _("Database error, couldn't set default permissions: %s"),
+                            $e->getMessage()
+                        );
+                    }
+                }
+            }
+        }
+
+        $viewdata = array(
+            "module"=>self::$module,
+            "message"=>$message,
+            "errormessage"=>$errormessage,
+            "rp"=>$this,
+        );
+        show_view("$cwd/views/settings13.php", $viewdata);
+    }
+
     public function getRoutes()
     {
         $sql = "SELECT DISTINCT name FROM outbound_routes JOIN outbound_route_sequence USING (route_id) ORDER BY seq";
@@ -463,22 +562,18 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
 
     public function updateDefaultDest($dest)
     {
-        $sql = "DELETE FROM routepermissions WHERE exten = -1";
         try {
+            $sql = "DELETE FROM routepermissions WHERE exten = -1";
             $this->db->query($sql);
-        } catch (\PDOException $e) {
-            return false;
-        }
-        if (!empty($dest)) {
-            $sql = "INSERT INTO routepermissions (exten, routename, faildest, prefix) VALUES ('-1', 'default', ?, '')";
-            try {
+            if (!empty($dest)) {
+                $sql = "INSERT INTO routepermissions (exten, routename, faildest, prefix) VALUES ('-1', 'default', ?, '')";
                 $stmt = $this->db->prepare($sql);
                 $stmt->execute(array($dest));
-            } catch (\PDOException $e) {
-                return false;
             }
+            return true;
+        } catch (\PDOException $e) {
+            throw $e;
         }
-        return true;
     }
 
     public function setRangePermissions($route, $range, $allowed, $faildest = "", $prefix = "") {
@@ -495,18 +590,14 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
             $stmt1 = $this->db->prepare($sql);
             $sql = "INSERT INTO routepermissions (exten, routename, allowed, faildest, prefix) VALUES (?, ?, ?, ?, ?)";
             $stmt2 = $this->db->prepare($sql);
-        } catch (\PDOException $e) {
-            return false;
-        }
-        foreach ($extens as $ext) {
-            try {
+            foreach ($extens as $ext) {
                 $stmt1->execute(array($ext, $route));
                 $stmt2->execute(array($ext, $route, $allowed, $faildest, $prefix));
-            } catch (\PDOException $e) {
-                return false;
             }
+            return true;
+        } catch (\PDOException $e) {
+            throw $e;
         }
-        return true;
     }
 
     private static function getRange($range_str) {
