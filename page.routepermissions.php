@@ -18,4 +18,4 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 $rp = new Routepermissions;
-$rp->handleRequest(isset($_POST) ? $_POST : null);
+$rp->showPage($_REQUEST);

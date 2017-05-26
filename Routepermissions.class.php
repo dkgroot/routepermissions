@@ -446,7 +446,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
     /**
      * Handle GET/POST requests to the page
      */
-    public function handleRequest($request = null)
+    public function showPage($request = null)
     {
         $cwd          = dirname(__FILE__);
         $message      = "";
