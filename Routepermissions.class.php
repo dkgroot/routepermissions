@@ -110,7 +110,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
             "idx_route" => array("type"=>"index", "cols"=>array("routename")),
         );
         try {
-            $table = $this->db->migrate("polycom");
+            $table = $this->db->migrate("routepermissions");
             $table->modify($columns, $indices);
         } catch (\Doctrine\DBAL\Exception $e) {
             die_freepbx(sprintf(_("Error updating routepermissions table: %s"), $e->getMessage()));
@@ -136,10 +136,10 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
             try {
                 $routes = \FreePBX::Core()->getAllRoutes();
                 $query = "INSERT INTO routepermissions (exten, routename, allowed, faildest) VALUES (?, ?, 'YES', '')";
-                $stmt = $db->prepare($query);
+                $stmt = $this->db->prepare($query);
                 foreach($extens as $ext) {
                     foreach ($routes as $r) {
-                        $db->execute($stmt, array($ext, $r["name"]));
+                        $this->db->execute($stmt, array($ext, $r["name"]));
                     }
                 }
             } catch (\Exception $e) {
@@ -534,6 +534,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
             "message"=>$message,
             "errormessage"=>$errormessage,
             "rp"=>$this,
+            "routes"=>$this->getRoutes(),
         );
         show_view("$cwd/views/settings13.php", $viewdata);
     }
@@ -542,8 +543,8 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
     {
         $sql = "SELECT DISTINCT name FROM outbound_routes JOIN outbound_route_sequence USING (route_id) ORDER BY seq";
         try {
-            $result = $this->db->getCol($sql);
-            return $result;
+            $result = $this->db->query($sql);
+            return $result->fetchAll(\PDO::FETCH_COLUMN, 0);
         } catch (\PDOException $e) {
             return false;
         }
@@ -553,8 +554,8 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
     {
         $sql = "SELECT faildest FROM routepermissions where exten = -1 LIMIT 1";
         try {
-            $result = $this->db->getOne($sql);
-            return $result;
+            $result = $this->db->query($sql);
+            return $result->fetchColumn(0);
         } catch (\PDOException $e) {
             return false;
         }
@@ -564,7 +565,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
     {
         try {
             $sql = "DELETE FROM routepermissions WHERE exten = -1";
-            $this->db->query($sql);
+            $this->db->exec($sql);
             if (!empty($dest)) {
                 $sql = "INSERT INTO routepermissions (exten, routename, faildest, prefix) VALUES ('-1', 'default', ?, '')";
                 $stmt = $this->db->prepare($sql);

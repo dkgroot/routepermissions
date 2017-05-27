@@ -78,7 +78,7 @@
 											<input name="permission_<?=$r?>" id="permission_<?=$r?>_YES" value="YES" type="radio"/>
 											<label for="permission_<?=$r?>_YES"><?=_("Allow")?></label>
 											<input name="permission_<?=$r?>" id="permission_<?=$r?>_NO" value="NO" type="radio"/>
-											<label for="permission_<?=$r?>_NO">_("Deny")?></label>
+											<label for="permission_<?=$r?>_NO"><?=_("Deny")?></label>
 											<input name="permission_<?=$r?>" id="permission_<?=$r?>_REDIRECT" value="REDIRECT" type="radio"/>
 											<label for="permission_<?=$r?>_REDIRECT"><?=_("Redirect w/prefix")?></label>
 										</span>

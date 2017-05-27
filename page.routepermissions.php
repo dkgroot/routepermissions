@@ -17,5 +17,8 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-$rp = new Routepermissions;
+if (!defined('FREEPBX_IS_AUTH')) {
+    die('No direct script access allowed');
+}
+$rp = \FreePBX::create()->Routepermissions;
 $rp->showPage($_REQUEST);
