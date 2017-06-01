@@ -220,10 +220,9 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
 
         // Insert the ROUTENAME into each route
         foreach (\FreePBX::Core()->getAllRoutes() as $route) {
-            $name = $route["name"];
-            $context = "outrt-$name[route_id]";
-            $routename = $name["name"];
-            $routes = core_routing_getroutepatternsbyid($name["route_id"]);
+            $context = "outrt-$route[route_id]";
+            $routename = $route["name"];
+            $routes = core_routing_getroutepatternsbyid($route["route_id"]);
             foreach ($routes as $rt) {
                 $extension = $rt["match_pattern_prefix"] . $rt["match_pattern_pass"];
                 // If there are any wildcards in there, add a _ to the start
@@ -246,7 +245,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
     }
 
     /**
-     * Perform our hook actions on page display (hooked)
+     * Perform our hook actions on page display
      *
      * @param Object $currentcomponent The ugly old page object
      * @param string $module The module name
@@ -256,6 +255,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
         $pagename   = isset($_REQUEST["display"]) ? $_REQUEST["display"] : "";
         $extdisplay = isset($_REQUEST["extdisplay"]) ? $_REQUEST["extdisplay"] : "";
         $action     = isset($_REQUEST["action"]) ? $_REQUEST["action"] : "";
+        $section    = _("Outbound Route Permissions");
         $i          = 0;
 
         if (
@@ -267,7 +267,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
 
         $routes = $this->getRoutes();
         try {
-            $stmt = $db->prepare("SELECT allowed, faildest, prefix FROM routepermissions WHERE routename = ? AND exten = ?");
+            $stmt = $this->db->prepare("SELECT allowed, faildest, prefix FROM routepermissions WHERE routename = ? AND exten = ?");
         } catch (\PDOException $e) {
             return false;
         }
@@ -338,13 +338,14 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
                 false, //input group (13+)
                 "", //class (13+)
                 true //autocomplete (13+)
+                    /* TODO: get rid of this */
             );
             $currentcomponent->addguielem($section, $input);
         }
     }
 
     /**
-     * Tell the system which pages' POSTs we want to hook (hooked)
+     * Tell the system which pages' POSTs we want to hook
      *
      * @return array All the pages (not modules) we want to hook into
      */
@@ -353,7 +354,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
     }
 
     /**
-     * Perform our hook action on page POST (hooked)
+     * Perform our hook action on page POST
      *
      * @param string $module The module name
      * @return boolean Returns false if there's nothing to do
