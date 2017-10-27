@@ -32,5 +32,5 @@ $(function() {
             .change()
             .prop("disabled", (this.value !== "NO"));
     });
-    // extensions page code is added per element: FUN!!!
+    // this script doesn't get included, so extensions page code has to be added per element: FUN!!!
 });

@@ -24,24 +24,29 @@
 			<div class="fpbx-container">
 				<div class="display no-border">
 					<h1><?php echo _("Route Permissions")?></h1>
-					<div class="panel panel-info">
-						<div class="panel-heading">
-							<div class="panel-title">
-								<a href="#" data-toggle="collapse" data-target="#moreinfo"><i class="glyphicon glyphicon-info-sign"></i></a>&nbsp;&nbsp;&nbsp;<?php echo _("What is Outbound Route Permissions?")?>
-							</div>
-						</div>
-						<div class="panel-body collapse" id="moreinfo">
-							<p><?php echo _("This module allows you to allow or deny access to certain routes from specified extensions. You can perform bulk changes on this page, and you can change an individual extension's access to routes on that extension's page.");?></p>
-							<p><?php echo _("In addition to simple Allow/Deny rules, you can also deny access to a route and then redirect the call, allowing a different outbound route to match the call.");?></p>
-							<p><?php echo _("For example, if you wanted to stop an extension from using Route A, selecting <b>Deny</b> would preclude the possibility of trying another route. Instead you could select <b>Redirect with prefix</b> and set the <b>Redirect prefix</b> to <code>9999</code>; assuming you've created Route B with a prefix match of <code>9999</code> and not set a deny rule on it, the call can proceed.");?></p>
-							<p><?php echo _("In addition, if you are denying access to a particular route and wish to use something other than the default destination, you can select <b>Redirect with prefix</b>, and create a <b>Miscellaneous Application</b> that matches the specified <b>Redirect prefix</b>. Using the previous example, a <b>Miscellaneous Application</b> with a feature code of <code>_9999x.</code> could be called if it existed on the system.");?></p>
-						</div>
+					<div class="well well-info">
+						<p><?php echo _("This module allows you to allow or deny access to certain routes from specified extensions. You can perform bulk changes on this page, and you can change an individual extension's access to routes on that extension's page.");?></p>
+						<p><?php echo _("In addition to simple Allow/Deny rules, you can also deny access to a route and then redirect the call, allowing a different outbound route to match the call.");?></p>
+						<p><?php echo _("For example, if you wanted to stop an extension from using Route A, selecting <b>Deny</b> would preclude the possibility of trying another route. Instead you could select <b>Redirect with prefix</b> and set the <b>Redirect prefix</b> to <code>9999</code>; assuming you've created Route B with a prefix match of <code>9999</code> and not set a deny rule on it, the call can proceed.");?></p>
+						<p><?php echo _("In addition, if you are denying access to a particular route and wish to use something other than the default destination, you can select <b>Redirect with prefix</b>, and create a <b>Miscellaneous Application</b> that matches the specified <b>Redirect prefix</b>. Using the previous example, a <b>Miscellaneous Application</b> with a feature code of <code>_9999x.</code> could be called if it existed on the system.");?></p>
 					</div>
 <?php if(!empty($message)):?>
-					<div class="alert alert-success" role="alert"><?php echo $message?></div>
+					<div class="alert alert-success alert-dismissable" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h3><i class="fa fa-info-circle" aria-hidden="true"></i> <?=_("Messages")?></h3>
+						<?php echo $message?>
+					</div>
 <?php endif;?>
 <?php if(!empty($errormessage)):?>
-					<div class="alert alert-warning" role="alert"><?php echo $errormessage?></div>
+					<div class="alert alert-warning alert-dismissable" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h3><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> <?=_("Errors")?></h3>
+						<?php echo $errormessage?>
+					</div>
 <?php endif;?>
 					<h4><?=htmlspecialchars(_("Bulk Changes"))?></h4>
 					<p>
@@ -69,25 +74,25 @@
 										<?=$r?>
 									</td>
 									<td>
-										<input name="range_<?=$r?>" id="range_<?=$r?>" value=<?=_("All")?> type="text" size="10">
+										<input name="range_<?=$r?>" id="range_<?=$r?>" value=<?=_("All")?> class="form-control" type="text" size="10">
 									</td>
 									<td>
 										<span class="radioset">
-											<input name="permission_<?=$r?>" id="permission_<?=$r?>_SKIP" value="" type="radio" checked="checked"/>
+											<input name="permission_<?=$r?>" id="permission_<?=$r?>_SKIP" value="" class="form-control" type="radio" checked="checked"/>
 											<label for="permission_<?=$r?>_SKIP"><?=_("No change")?></label>
-											<input name="permission_<?=$r?>" id="permission_<?=$r?>_YES" value="YES" type="radio"/>
+											<input name="permission_<?=$r?>" id="permission_<?=$r?>_YES" value="YES" class="form-control" type="radio"/>
 											<label for="permission_<?=$r?>_YES"><?=_("Allow")?></label>
-											<input name="permission_<?=$r?>" id="permission_<?=$r?>_NO" value="NO" type="radio"/>
+											<input name="permission_<?=$r?>" id="permission_<?=$r?>_NO" value="NO" class="form-control" type="radio"/>
 											<label for="permission_<?=$r?>_NO"><?=_("Deny")?></label>
-											<input name="permission_<?=$r?>" id="permission_<?=$r?>_REDIRECT" value="REDIRECT" type="radio"/>
+											<input name="permission_<?=$r?>" id="permission_<?=$r?>_REDIRECT" value="REDIRECT" class="form-control" type="radio"/>
 											<label for="permission_<?=$r?>_REDIRECT"><?=_("Redirect w/prefix")?></label>
 										</span>
 									</td>
 									<td>
-										<?=FreePBX::View()->alertInfoDrawSelect("goto_$r")?>
+										<?=\drawselects("", "_$r", false, false, _("Use default"))?>
 									</td>
 									<td>
-										<input name="prefix_$r" type="text" placeholder="<?=_("Prefix")?>" size="10"/>
+										<input name="prefix_$r" type="text" class="form-control" placeholder="<?=_("Prefix")?>" size="10"/>
 									</td>
 								</tr>
 <?php endforeach?>
@@ -106,7 +111,7 @@
 							<?=_("Select the destination for calls when they are denied without specifying a destination.")?>
 						</p>
 						<p>
-							<?=FreePBX::View()->alertInfoDrawSelect("faildest", $rp->getDefaultDest())?>
+							<?=\drawselects($rp->getDefaultDest(), "faildest")?>
 						</p>
 						<p>
 							<button name="update_default" type="submit"><?=_("Change Destination")?></button>
