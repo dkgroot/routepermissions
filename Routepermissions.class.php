@@ -229,6 +229,12 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
                 if (preg_match("/\.|z|x|\[|\]/i", $extension)) {
                     $extension = "_".$extension;
                 }
+                if (!empty($rt['match_cid'])) {
+                    $cid = (preg_match("/\.|z|x|\[|\]/i", $rt['match_cid']))
+                        ? '_'.$rt['match_cid']
+                        : $rt['match_cid'];
+                    $extension = $extension.'/'.$cid;
+                }
                 $ext->splice($context, $extension, 1, new \ext_setvar("__ROUTENAME", $routename));
             }
         }
@@ -241,7 +247,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
      */
     public static function myGuiHooks() {
         // extensions page is part of core.
-        return ["core"];
+        return array("core");
     }
 
     /**
@@ -350,7 +356,7 @@ class Routepermissions extends \FreePBX\FreePBX_Helpers implements \FreePBX\BMO
      * @return array All the pages (not modules) we want to hook into
      */
     public static function myConfigPageInits() {
-        return ["extensions", "users"];
+        return array("extensions", "users");
     }
 
     /**
